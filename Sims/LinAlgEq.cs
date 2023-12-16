@@ -2,10 +2,11 @@
 // LinAlgEq.cs  Defines a class for a linear algebraic equations solver
 //============================================================================
 using System;
+using Godot;
 
 public class LinAlgEq
 {
-    private int n = 3;       // number of algebraic equations (number of unknowns too)
+    private int n = 5;       // number of algebraic equations (number of unknowns too)
     private double[][] _A;   // coefficient matrix
     private double[] _b;     // right hand side
     private double[][] M;    // augmented matrix
@@ -70,16 +71,38 @@ public class LinAlgEq
             M[i][n] = _b[i];
         }
 
-        // perform Gauss elimination
-        // ######## YOU MUST WRITE YOUR GAUSS ELIMINATION CODE HERE
-        // ######## FIRST, GET IT WORKING WITHOUT PIVOTING
-        // ########     ONCE YOU GET IT WORKING WITHOUT PIVOTING, 
-        // ########     THEN YOU CAN IMPLEMENT PIVOTING WITH ONE 
-        // ########     WELL-PLACED CALL TO THE pivotRow METHOD BELOW.
         
 
-        // perform back substitution
-        // ######## YOU MUST WRITE YOUR BACK SUBSTITUTION CODE HERE
+        //private double[][] _A;   // coefficient matrix
+        //private double[] _b;     // right hand side
+        //private double[][] M;    // augmented matrix
+        //private double[] _x;     // solution
+
+          for (i = 0; i < n; i++)
+            {
+                //------------------------my call is here--------------------
+                PivotRow(i);
+                //-----------------------------------------------------------
+                for(j = i + 1; j < n; j++)
+                {
+                    double Pivet_element = M[j][i]/M[i][i];
+                    for(k = i; k <= n; k++)
+                    {
+                        M[j][k] = M[j][k] - Pivet_element * M[i][k];
+                        
+                    }
+                }
+            }
+            
+        for(i = n-1; i >= 0; i--)
+        {
+            _x[i] = M[i][n]/M[i][i];
+            for(j = i - 1; j >= 0; j--)
+            {
+                M[j][n] = M[j][n]-M[j][i] * _x[i];
+            }
+        }
+        
     }
 
     //--------------------------------------------------------------------
@@ -169,4 +192,6 @@ public class LinAlgEq
             return _x;
         }
     }
+
+
 }

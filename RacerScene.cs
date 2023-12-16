@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 
 public partial class RacerScene : Node3D
 {
+	
 	private CamRig cam;
 	float longitudeDeg;
 	float latitudeDeg;
@@ -59,6 +60,7 @@ public partial class RacerScene : Node3D
 		cam.Target = camTg;
 		cam.FOVDeg = camFOV;
 
+		
 		// set up the data display
 		dataDisplay = GetNode<UIPanelDisplay>("Control/MarginContainer/DataDisplay");
 		dataDisplay.SetNDisplay(5);
@@ -67,11 +69,16 @@ public partial class RacerScene : Node3D
 		dataDisplay.SetLabel(1,"Speed");
 		dataDisplay.SetValue(1,"---");
 		dataDisplay.SetLabel(2,"Kin. Energy");
-		dataDisplay.SetValue(2,"---");
+		dataDisplay.SetValue(2,"---");					
 		dataDisplay.SetLabel(3,"Slip Rate F");
 		dataDisplay.SetValue(3,"---");
 		dataDisplay.SetLabel(4,"Slip Rate R");
 		dataDisplay.SetValue(4,"---");
+													//added more decimals to slip values that display
+		dataDisplay.SetDigitsAfterDecimal(3,6);
+		dataDisplay.SetDigitsAfterDecimal(4,6);
+
+
 
 		// set up the cart model
 		cart = GetNode<Cart>("Cart");
@@ -102,9 +109,18 @@ public partial class RacerScene : Node3D
 	public override void _Process(double delta)
 	{
 		
-		cart.SetLoc(0.0f, 0.0f, 0.0f, // need to update this with other states
-			0.0f, 0.0f, 0.0f, 
+		cart.SetLoc((float)racer.xG, (float)racer.zG, (float)racer.Heading, // need to update this with other states
+			(float)racer.WheelAngleL, (float)racer.WheelAngleR, (float)racer.WheelAngleF, 
 			(float)racer.SteerAngle);
+
+
+
+		//------------------------writing labels-----------
+		dataDisplay.SetValue(1,(float)racer.Speed);
+		dataDisplay.SetValue(2,(float)racer.KineticEnergy);
+		dataDisplay.SetValue(3,(float)racer.SlipRateFront);
+		dataDisplay.SetValue(4,(float)racer.SlipRateRear);
+		//---------------------my code ends here----------
 	}
 
     //------------------------------------------------------------------------
@@ -117,8 +133,10 @@ public partial class RacerScene : Node3D
 		ProcessPilotInput();
 		racer.SteerAngleSignal = (-50.0 * steerSig)*Math.PI/180.0;
 
-		racer.StepRK2(time,delta);  // You are going to use the RK4 integrator
+		racer.StepRK4(time,delta);  // You are going to use the RK4 integrator
 		time += delta;
+		
+		
 
 		camSubject.X = (float)racer.xG;
 		camSubject.Z = (float)racer.zG;

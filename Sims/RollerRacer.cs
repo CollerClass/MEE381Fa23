@@ -3,6 +3,8 @@
 //       Equations of motion are derived in class notes.
 //============================================================================
 using System;
+using System.Xml.Schema;
+using Godot;
 
 public class RollerRacer : Simulator
 {
@@ -54,6 +56,7 @@ public class RollerRacer : Simulator
 
     private void RHSFuncRRacer(double[] xx, double t, double[] ff)
     {
+
         // give names to some state variable so code is easier to read & write
         double xDot = xx[1];
         double zDot = xx[3];
@@ -70,21 +73,56 @@ public class RollerRacer : Simulator
         double cosPsiPlusDelta = Math.Cos(psi + delta);
         double sinPsiPlusDelta = Math.Sin(psi + delta);
 
-        // #### You will do some hefty calculations here
+        // #### You will do some hefty calculations here            my added content starts here
+        LinAlgEq sys = new LinAlgEq(5);
+        
+        sys.A[0][0] = m;
+        sys.A[0][1] = 0;
+        sys.A[0][2] = 0;
+        sys.A[0][3] = -sinPsiPlusDelta;
+        sys.A[0][4] = -sinPsi;
+        sys.A[1][0] = 0;
+        sys.A[1][1] = m;
+        sys.A[1][2] = 0;
+        sys.A[1][3] = -cosPsiPlusDelta;
+        sys.A[1][4] = -cosPsi;
+        sys.A[2][0] = 0;
+        sys.A[2][1] = 0;
+        sys.A[2][2] = Ig;
+        sys.A[2][3] = (h * cosDelta) - d;
+        sys.A[2][4] = b;
+        sys.A[3][0] = sinPsi;
+        sys.A[3][1] = cosPsi;
+        sys.A[3][2] = b;
+        sys.A[3][3] = 0;
+        sys.A[3][4] = 0;
+        sys.A[4][0] = sinPsiPlusDelta;
+        sys.A[4][1] = cosPsiPlusDelta;
+        sys.A[4][2] = (-h*cosDelta)+d;
+        sys.A[4][3] = 0;
+        sys.A[4][4] = 0;
 
-        // #### Right sides are zero for now. You will fix
-        ff[0] = 0.0;
-        ff[1] = 0.0;
-        ff[2] = 0.0;
-        ff[3] = 0.0;
-        ff[4] = 0.0;
-        ff[5] = 0.0;
-        ff[6] = 0.0;
-        ff[7] = 0.0;
-        ff[8] = 0.0;
+        sys.b[0] = 0;
+        sys.b[1] = 0;
+        sys.b[2] = 0;
+        sys.b[3] = -xDot*psiDot*cosPsi + zDot*psiDot*sinPsi;
+        sys.b[4] = (-(-kDDelta*deltaDot -kPDelta*(delta - deltaDes))*d)-(xDot*(psiDot+deltaDot)*cosPsiPlusDelta) + zDot*(psiDot+deltaDot)*sinPsiPlusDelta - h*psiDot*deltaDot*sinDelta;
+        
+        sys.SolveGauss();
+
+        double[] solutions = sys.sol;
+        ff[0] = xDot;
+        ff[1] = sys.sol[0];   
+        ff[2] = zDot;
+        ff[3] = sys.sol[1];
+        ff[4] = psiDot;
+        ff[5] = sys.sol[2];
+        ff[6] = (1/rW)*(-xDot*cosPsi + zDot*sinPsi + c*psiDot);
+        ff[7] = (1/rW)*(-xDot*cosPsi + zDot*sinPsi - c*psiDot);
+        ff[8] = (1/rWs)*(-xDot*cosPsiPlusDelta + zDot*sinPsiPlusDelta - h*psiDot*sinDelta);
         ff[9] = deltaDot;
         ff[10] = -kDDelta*deltaDot -kPDelta*(delta - deltaDes);
-
+      
         simBegun = true;
     }
 
@@ -212,7 +250,7 @@ public class RollerRacer : Simulator
         get{
             // ######## You have to write this part ################
 
-            return(-1.21212121);
+            return Math.Sqrt((x[1] * x[1]) + (x[3] * x[3]));
         }
     }
 
@@ -220,8 +258,9 @@ public class RollerRacer : Simulator
     {
         get{
             // ######## You have to write this part ################
-
-            return(-1.21212121);
+            double KE1 = 0.5 * m * ((x[1] * x[1]) + (x[3] * x[3]));
+            double KE2 = 0.5 * Ig *(x[5] * x[5]);
+            return KE1 + KE2;
         }
     }
 
@@ -230,7 +269,9 @@ public class RollerRacer : Simulator
         get{
             // ######## You have to write this part ################
 
-            return(-1.21212121);
+            return x[1] * Math.Sin(x[4] + x[9]) + (x[3] * Math.Cos(x[4] + x[9]))
+             - (h * x[5] * Math.Cos(x[9])
+              + (d*(x[9] + x[5])));
         }
     }
 
@@ -239,7 +280,7 @@ public class RollerRacer : Simulator
         get{
             // ######## You have to write this part ################
 
-            return(-1.21212121);
+            return x[1] * Math.Sin(x[4]) + (x[3] * Math.Cos(x[4])) + (b * x[5]);
         }
     }
 
@@ -248,7 +289,7 @@ public class RollerRacer : Simulator
         get{
             // ######## You have to write this part ################
 
-            return(-1.21212121);
+            return x[1]*Math.Sin(x[4]) + x[3]*Math.Cos(x[4]) + b*x[5];
         }
     }
 }
